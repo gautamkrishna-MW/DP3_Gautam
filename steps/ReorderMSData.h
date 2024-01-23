@@ -33,6 +33,8 @@ class Reorder : public Step {
     kRequiredFields = kDataField | kFlagsField | kWeightsField | kUvwField;
     kProvidedFields = kRequiredFields;
     std::cout << "Reorder Call: " << prefix << std::endl;
+    std::cout << "MS Path: " << parset.getString("msin") << std::endl;
+    std::cout << "MS Path: " << parset.getString("msout") << std::endl;
   }
 
   /// Construct the object using the given parameters.

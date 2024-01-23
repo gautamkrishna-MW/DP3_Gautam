@@ -524,7 +524,16 @@ add_library(
   steps/UVWFlagger.cc
   steps/ApplyBeam.cc
   steps/NullStokes.cc
-  steps/SagecalPredict.cc)
+  steps/SagecalPredict.cc
+  steps/reorderHelperFiles/src/facetreader.cpp 
+  steps/reorderHelperFiles/src/facetutil.cpp    
+  steps/reorderHelperFiles/src/wsclean.cpp
+  steps/reorderHelperFiles/src/imagingtable.cpp  
+  steps/reorderHelperFiles/src/msselection.cpp  
+  steps/reorderHelperFiles/src/imagingtableentry.cpp  
+  steps/reorderHelperFiles/src/observationinfo.cpp  
+  steps/reorderHelperFiles/src/progressbar.cpp  
+  steps/reorderHelperFiles/src/settings.cpp)
 target_link_libraries(DP3_OBJ xsimd xtensor)
 
 add_library(
