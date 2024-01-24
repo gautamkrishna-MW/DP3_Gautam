@@ -3,7 +3,7 @@
 
 #include "ScreenConstraint.h"
 
-#include <aocommon/dynamicfor.h>
+#include <aocommon/parallelfor.h>
 
 #include <boost/algorithm/string/case_conv.hpp>
 
