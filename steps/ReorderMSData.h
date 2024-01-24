@@ -11,6 +11,8 @@
 #include "../common/Timer.h"
 #include <iostream>
 
+#include "reorderHelperFiles/include/wsclean.h"
+
 namespace dp3 {
 
 namespace common {
@@ -35,6 +37,10 @@ class Reorder : public Step {
     std::cout << "Reorder Call: " << prefix << std::endl;
     std::cout << "MS Path: " << parset.getString("msin") << std::endl;
     std::cout << "MS Path: " << parset.getString("msout") << std::endl;
+
+    WSClean cleanObj;
+    cleanObj.RunClean();
+
   }
 
   /// Construct the object using the given parameters.

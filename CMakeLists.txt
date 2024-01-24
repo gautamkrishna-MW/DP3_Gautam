@@ -527,6 +527,7 @@ add_library(
   steps/SagecalPredict.cc
   steps/reorderHelperFiles/src/facetreader.cpp 
   steps/reorderHelperFiles/src/facetutil.cpp    
+  steps/reorderHelperFiles/src/partition.cpp
   steps/reorderHelperFiles/src/wsclean.cpp
   steps/reorderHelperFiles/src/imagingtable.cpp  
   steps/reorderHelperFiles/src/msselection.cpp  
