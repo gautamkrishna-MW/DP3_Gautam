@@ -39,7 +39,10 @@ class Reorder : public Step {
     std::cout << "MS Path: " << parset.getString("msout") << std::endl;
 
     WSClean cleanObj;
-    cleanObj.RunClean();
+    Settings& settingsObj = cleanObj.GetSettings();
+    settingsObj.filenames.push_back(parset.getString("msin"));
+    // cleanObj.RunClean();
+    cleanObj.RunPredict();
 
   }
 
