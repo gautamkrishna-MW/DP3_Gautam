@@ -221,9 +221,9 @@ void WSClean::makeImagingTableEntry(
 void WSClean::performReordering(bool isPredictMode) {
   std::mutex mutex;
 
-  bool useModel = _settings.deconvolutionMGain != 1.0 || isPredictMode ||
+  partitionObj.includeModel = _settings.deconvolutionMGain != 1.0 || isPredictMode ||
                   _settings.subtractModel || _settings.continuedRun;
-  bool initialModelRequired = _settings.subtractModel || _settings.continuedRun;
+  partitionObj.initialModelRequired = _settings.subtractModel || _settings.continuedRun;
 
   if (_settings.parallelReordering != 1) Logger::Info << "Reordering...\n";
 
@@ -231,7 +231,7 @@ void WSClean::performReordering(bool isPredictMode) {
   aocommon::DynamicFor<size_t> loop;
   loop.Run(0, _settings.filenames.size(), [&](size_t msIndex) {
     aocommon::ScopedCountingSemaphoreLock semaphore_lock(semaphore);
-    std::vector<ChannelRange> channels;
+    // std::vector<ChannelRange> channels;
     // The partIndex needs to increase per data desc ids and channel ranges
     std::map<PolarizationEnum, size_t> nextIndex;
     for (size_t sqIndex = 0; sqIndex != _imagingTable.SquaredGroupCount();
@@ -252,7 +252,7 @@ void WSClean::performReordering(bool isPredictMode) {
               r.dataDescId = d;
               r.start = selection.ChannelRangeStart();
               r.end = selection.ChannelRangeEnd();
-              channels.push_back(r);
+              partitionObj.channels.push_back(r);
             }
             for (ImagingTableEntry& facetEntry : facetGroup) {
               facetEntry.msData[msIndex].bands[d].partIndex =
@@ -264,17 +264,11 @@ void WSClean::performReordering(bool isPredictMode) {
       }
     }
 
-    PartitionMain(_settings.filenames[msIndex], channels, _globalSelection,
-        _settings.dataColumnName, useModel, initialModelRequired, _settings);
-
-    // PartitionedMS::Handle partMS = PartitionedMS::Partition(
-    //     _settings.filenames[msIndex], channels, _globalSelection,
-    //     _settings.dataColumnName, useModel, initialModelRequired, _settings);
+    // PartitionMain(_settings.filenames[msIndex], channels, _globalSelection,
+    //     _settings.dataColumnName, useModel, initialModelRequired, _settings, std::move(buffer));
+    partitionObj.msPath = _settings.filenames[msIndex];
+    partitionObj.preprocessPartition(_globalSelection, _settings.dataColumnName, _settings);
     std::lock_guard<std::mutex> lock(mutex);
-    // _partitionedMSHandles[msIndex] = std::move(partMS);
-    if (_settings.parallelReordering != 1)
-      Logger::Info << "Finished reordering " << _settings.filenames[msIndex]
-                   << " [" << msIndex << "]\n";
   });
 }
 
@@ -452,28 +446,12 @@ void WSClean::RunClean() {
   if (!dd_psfs.empty()) updateFacetsInImagingTable(dd_psfs, true);
 
   _globalSelection = selectInterval(fullSelection, 0);
-  performReordering(false);
+
+
+  // performReordering(false);
 }
 
 void WSClean::RunPredict() {
-  // When facets are used, the initialization of the imaging table and the
-  // facets depend on eachother. We therefore use this approach:
-  // 1. Count the number of facets and store in _facetCount.
-  // 2. Create the imaging table using _facetCount and set the facet index in
-  //    the imaging table entries. Each interval loop iteration creates a new
-  //    imaging table.
-  // 3. Read the image size and pixel scale from the input fits file
-  //    corresponding to the first imaging table entry. This way, the user does
-  //    not have to specify these values on the command line.
-  // 4. In the first interval loop iteration, update the settings using the
-  //    values from the input fits file. In subsequent iterations, check if the
-  //    image size and pixel scale match the existing settings.
-  // 5. In the first interval loop iteration, create the facets using the new
-  //    settings. In subsequent iterations, the settings do not change so
-  //    recreating the facets is not needed.
-  // 6. Set the facets and related properties in the imaging table entries,
-  //    using the existing facet index in the entries.
-
   _observationInfo = getObservationInfo();
   std::vector<std::shared_ptr<schaapcommon::facets::Facet>> facets;
   _facetCount = FacetReader::CountFacets(_settings.facetRegionFilename);
@@ -489,7 +467,7 @@ void WSClean::RunPredict() {
   _infoPerChannel.assign(_settings.channelsOut, OutputChannelInfo());
   _globalSelection = selectInterval(fullSelection, 0);
 
-  performReordering(true);
+  // performReordering(true);
 }
 
 MSSelection WSClean::selectInterval(MSSelection& fullSelection,

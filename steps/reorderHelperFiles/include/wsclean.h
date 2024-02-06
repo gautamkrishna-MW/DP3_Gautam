@@ -9,9 +9,9 @@
 #include <aocommon/imagecoordinates.h>
 
 #include <schaapcommon/facets/facet.h>
+#include <dp3/base/DPBuffer.h>
 
 #include "imagingtable.h"
-
 #include "observationinfo.h"
 #include "outputchannelinfo.h"
 #include "weightmode.h"
@@ -50,10 +50,12 @@ class WSClean {
    * inferred from the first entry in the _imagingTable in an early stage.
    */
   void RunPredict();
-
- private:
   void performReordering(bool isPredictMode);
 
+  PartitionClass partitionObj;
+
+ private:
+  
   /**
    * Returns true when gridding is done with a-terms. This can either
    * be enabled by setting the gridWithBeam setting to true or by providing

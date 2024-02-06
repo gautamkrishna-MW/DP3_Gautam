@@ -514,6 +514,7 @@ add_library(
   steps/PhaseShift.cc
   steps/Predict.cc
   steps/PreFlagger.cc
+  steps/ReorderMSData.cc
   steps/ResultStep.cc
   steps/ScaleData.cc
   steps/SetBeam.cc
