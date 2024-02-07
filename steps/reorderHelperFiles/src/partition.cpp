@@ -28,6 +28,7 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include "../include/progressbar.h"
 
 using aocommon::Logger;
 using dp3::base::DPInfo;
@@ -572,8 +573,8 @@ template void PartitionClass::CopyWeights<std::complex<float>>(
     aocommon::PolarizationEnum polOut);
 
 
-void PartitionClass::preprocessPartition(MSSelection& selection, 
-  const string& dataColumnName, const Settings& settings)
+void PartitionClass::preprocessPartition(const string& dataColumnName,
+           const Settings& settings)
 {
   if (settings.gridderType == GridderType::IDG) {
     if (settings.polarizations.size() == 1) {
@@ -595,9 +596,7 @@ void PartitionClass::preprocessPartition(MSSelection& selection,
       aocommon::Polarization::GetVisibilityCount(*polsOut.begin());
   temporaryDirectory = settings.temporaryDirectory;
    
-  // const size_t 
   channelParts = channels.size();
-
   if (channelParts != 1) {
     Logger::Debug << "Partitioning in " << channels.size() << " channels:";
     for (size_t i = 0; i != channels.size(); ++i)
@@ -608,7 +607,6 @@ void PartitionClass::preprocessPartition(MSSelection& selection,
 
   // Ordered as files[pol x channelpart]
   files.resize(channelParts * polsOut.size());
-
   max_channels = GetMaxChannels(channels);
 
   // Each data desc id needs a separate meta file because they can have
@@ -629,13 +627,10 @@ void PartitionClass::preprocessPartition(MSSelection& selection,
     }
   }
 
+  // Gautam TODO: Write MSPorvider Impl
+
   // This maps dataDescId to spw index.
   selectedDataDescIds = getDataDescIdMap(channels);
-
-  
-  // const size_t nAntennas = msObj.antenna().nrow(); // Error Check : Not used anywhere
-  // const aocommon::MultiBandData bands(msObj); // Error Check : Not used anywhere
-
   if (settings.parallelReordering == 1)
     Logger::Info << "Reordering " << msPath << " into " << channelParts << " x "
                  << polsOut.size() << " parts.\n";
@@ -672,59 +667,47 @@ void PartitionClass::processPartition(dp3::base::DPBuffer* buffer)
   dataBuffer.assign(max_channels * polarizationsPerFile, 0.0);
   std::vector<float> weightBuffer(polarizationsPerFile * max_channels);
 
+  // Get DP3 time frame details.
   unsigned int n_baselines = buffer->GetFlags().shape(0);
   unsigned int n_channels = buffer->GetFlags().shape(1);
   unsigned int n_correlations = buffer->GetFlags().shape(2);
-
-  // casacore::IPosition	arrSize(n_channels*n_correlations);
-  casacore::Array<std::complex<float>> dataArray;
-  casacore::Array<std::complex<float>> modelArray;
-  casacore::Array<float> weightSpectrumArray;
-  casacore::Array<bool> flagArray;
 
   dp3::base::DPBuffer::FlagsType buffFlags = buffer->GetFlags();
   dp3::base::DPBuffer::UvwType buffUvw = buffer->GetUvw();
   dp3::base::DPBuffer::WeightsType buffWeights = buffer->GetWeights();
   dp3::base::DPBuffer::DataType buffData = buffer->GetData();
   casacore::Vector<dp3::common::rownr_t> rowNum = buffer->GetRowNumbers();
+  std::vector<int> antenna1List = infoObj.getAnt1();
+  std::vector<int> antenna2List = infoObj.getAnt2();
+  uint32_t dataDescId = infoObj.spectralWindow();
+
+  // Casacore arrays used to write the meta, data, weight and model files.
+  casacore::Array<std::complex<float>> dataArray;
+  casacore::Array<std::complex<float>> modelArray;
+  casacore::Array<float> weightSpectrumArray;
+  casacore::Array<bool> flagArray;
 
   size_t selectedRowsTotal = 0;
   selectedRowCountPerSpwIndex.resize(selectedDataDescIds.size(), 0);
 
-  std::vector<int> antenna1List = infoObj.getAnt1();
-  std::vector<int> antenna2List = infoObj.getAnt2();
+  for (size_t bl=0; bl<n_baselines; bl++) {
 
-  for (int bl=0; bl<n_baselines; bl++) {
-
-    MetaRecord meta;
-    uint32_t dataDescId;
-    
+    MetaRecord meta;    
     size_t strideVal = n_channels*n_correlations;
     bool *flagPtr = &buffFlags(bl, 0, 0);
     float *weightPtr = &buffWeights(bl, 0, 0);
     std::complex<float> *dataPtr = &buffData(bl, 0, 0);
 
     flagArray = casacore::Vector<bool>(flagPtr, strideVal, 0);
-    weightSpectrumArray = casacore::Vector<float>(weightPtr, strideVal, 0);
     dataArray = casacore::Vector<std::complex<float>>(dataPtr, strideVal, 0);
+    weightSpectrumArray = casacore::Vector<float>(weightPtr, strideVal, 0);
     
-    static bool locker = true;
-    if (locker)
-    {
-      std::cout << "DataArray: " << dataArray << std::endl;
-      locker = false;
-    }
-    
-    dataDescId = infoObj.spectralWindow();
-
-    meta.u = buffUvw(bl,0);
-    meta.v = buffUvw(bl,1);
-    meta.w = buffUvw(bl,2);
-    
+    meta.u = buffUvw(bl,0);meta.v = buffUvw(bl,1);meta.w = buffUvw(bl,2);    
     meta.antenna1 = antenna1List[bl];
     meta.antenna2 = antenna2List[bl];
     meta.fieldId = 0;
     meta.time = buffer->GetTime();
+
     const size_t spwIndex = selectedDataDescIds.find(dataDescId)->second;
     ++selectedRowCountPerSpwIndex[spwIndex];
     ++selectedRowsTotal;
@@ -780,8 +763,6 @@ void PartitionClass::processPartition(dp3::base::DPBuffer* buffer)
         fileIndex += polsOut.size();
       }
     }
-
-    // rowProvider->NextRow();
   }
   Logger::Debug << "Total selected rows: " << selectedRowsTotal << '\n';
 }

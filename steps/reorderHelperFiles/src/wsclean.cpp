@@ -264,10 +264,8 @@ void WSClean::performReordering(bool isPredictMode) {
       }
     }
 
-    // PartitionMain(_settings.filenames[msIndex], channels, _globalSelection,
-    //     _settings.dataColumnName, useModel, initialModelRequired, _settings, std::move(buffer));
     partitionObj.msPath = _settings.filenames[msIndex];
-    partitionObj.preprocessPartition(_globalSelection, _settings.dataColumnName, _settings);
+    partitionObj.preprocessPartition(_settings.dataColumnName, _settings);
     std::lock_guard<std::mutex> lock(mutex);
   });
 }
@@ -384,92 +382,6 @@ void WSClean::updateFacetsInImagingTable(
   }
 }
 
-
-void WSClean::RunClean() {
-  _observationInfo = getObservationInfo();
-  std::tie(_l_shift, _m_shift) = getLMShift();
-
-  std::vector<std::shared_ptr<schaapcommon::facets::Facet>> facets =
-      FacetReader::ReadFacets(
-          _settings.facetRegionFilename, _settings.trimmedImageWidth,
-          _settings.trimmedImageHeight, _settings.pixelScaleX,
-          _settings.pixelScaleY, _observationInfo.phaseCentreRA,
-          _observationInfo.phaseCentreDec, _l_shift, _m_shift,
-          _settings.imagePadding, _settings.gridderType == GridderType::IDG,
-          _settings.GetFeatherSize());
-  _facetCount = facets.size();
-
-  std::vector<std::shared_ptr<schaapcommon::facets::Facet>> dd_psfs;
-  if (_settings.ddPsfGridWidth > 1 || _settings.ddPsfGridHeight > 1) {
-    const schaapcommon::facets::Facet::InitializationData facet_data =
-        CreateFacetInitializationData(
-            _settings.trimmedImageWidth, _settings.trimmedImageHeight,
-            _settings.pixelScaleX, _settings.pixelScaleY,
-            _observationInfo.phaseCentreRA, _observationInfo.phaseCentreDec,
-            _l_shift, _m_shift, _settings.imagePadding,
-            _settings.gridderType == GridderType::IDG, 0);
-    dd_psfs = CreateFacetGrid(facet_data, _settings.ddPsfGridWidth,
-                              _settings.ddPsfGridHeight);
-  }
-  _ddPsfCount = dd_psfs.size();
-
-  schaapcommon::facets::PixelPosition centerPixel(
-      _settings.trimmedImageWidth / 2, _settings.trimmedImageHeight / 2);
-  const bool hasCenter = std::any_of(
-      facets.begin(), facets.end(),
-      [&centerPixel](
-          const std::shared_ptr<schaapcommon::facets::Facet>& facet) {
-        // Point-in-poly test only evaluated if bounding box does
-        // contain the centerPixel
-        return facet->GetTrimmedBoundingBox().Contains(centerPixel) &&
-               facet->Contains(centerPixel);
-      });
-
-  // FIXME: raise warning if facets do not cover the entire image, see AST-429
-
-  // Center pixel should be present in one of the facets for the deconvolution
-  if (!facets.empty() && _settings.deconvolutionIterationCount > 0 &&
-      !hasCenter) {
-    throw std::runtime_error(
-        "The center pixel of the full image is not found in one of the facets. "
-        "Make sure your facet file defines a facet that covers the center "
-        "pixel of the main image.");
-  }
-
-  _globalSelection = _settings.GetMSSelection();
-  MSSelection fullSelection = _globalSelection;
- 
-  // DP3 Reordering only works on first interval index (intervalIndex = 0)
-  // Rest will be performed by WSClean
-  makeImagingTable(0);
-  if (!facets.empty()) updateFacetsInImagingTable(facets, false);
-  if (!dd_psfs.empty()) updateFacetsInImagingTable(dd_psfs, true);
-
-  _globalSelection = selectInterval(fullSelection, 0);
-
-
-  // performReordering(false);
-}
-
-void WSClean::RunPredict() {
-  _observationInfo = getObservationInfo();
-  std::vector<std::shared_ptr<schaapcommon::facets::Facet>> facets;
-  _facetCount = FacetReader::CountFacets(_settings.facetRegionFilename);
-  std::tie(_l_shift, _m_shift) = getLMShift();
-
-  _globalSelection = _settings.GetMSSelection();
-  MSSelection fullSelection = _globalSelection;
-
-  // DP3 Reordering only works on first interval index (intervalIndex = 0)
-  // Rest will be performed by WSClean
-  makeImagingTable(0);
-
-  _infoPerChannel.assign(_settings.channelsOut, OutputChannelInfo());
-  _globalSelection = selectInterval(fullSelection, 0);
-
-  // performReordering(true);
-}
-
 MSSelection WSClean::selectInterval(MSSelection& fullSelection,
                                     size_t intervalIndex) {
   if (_settings.intervalsOut == 1)
@@ -513,4 +425,76 @@ MSSelection WSClean::selectInterval(MSSelection& fullSelection,
         tS + (tE - tS) * (intervalIndex + 1) / _settings.intervalsOut);
     return newSelection;
   }
+}
+
+void WSClean::RunPredict() {
+  _observationInfo = getObservationInfo();
+  std::vector<std::shared_ptr<schaapcommon::facets::Facet>> facets;
+  _facetCount = FacetReader::CountFacets(_settings.facetRegionFilename);
+  std::tie(_l_shift, _m_shift) = getLMShift();
+  makeImagingTable(0);
+  _infoPerChannel.assign(_settings.channelsOut, OutputChannelInfo());
+  _globalSelection = _settings.GetMSSelection();
+  MSSelection fullSelection = _globalSelection;
+  _globalSelection = selectInterval(fullSelection, 0);
+}
+
+void WSClean::RunClean() {
+  _observationInfo = getObservationInfo();
+  std::tie(_l_shift, _m_shift) = getLMShift();
+
+  std::vector<std::shared_ptr<schaapcommon::facets::Facet>> facets =
+      FacetReader::ReadFacets(
+          _settings.facetRegionFilename, _settings.trimmedImageWidth,
+          _settings.trimmedImageHeight, _settings.pixelScaleX,
+          _settings.pixelScaleY, _observationInfo.phaseCentreRA,
+          _observationInfo.phaseCentreDec, _l_shift, _m_shift,
+          _settings.imagePadding, _settings.gridderType == GridderType::IDG,
+          _settings.GetFeatherSize());
+  _facetCount = facets.size();
+
+  std::vector<std::shared_ptr<schaapcommon::facets::Facet>> dd_psfs;
+  if (_settings.ddPsfGridWidth > 1 || _settings.ddPsfGridHeight > 1) {
+    const schaapcommon::facets::Facet::InitializationData facet_data =
+        CreateFacetInitializationData(
+            _settings.trimmedImageWidth, _settings.trimmedImageHeight,
+            _settings.pixelScaleX, _settings.pixelScaleY,
+            _observationInfo.phaseCentreRA, _observationInfo.phaseCentreDec,
+            _l_shift, _m_shift, _settings.imagePadding,
+            _settings.gridderType == GridderType::IDG, 0);
+    dd_psfs = CreateFacetGrid(facet_data, _settings.ddPsfGridWidth,
+                              _settings.ddPsfGridHeight);
+  }
+  _ddPsfCount = dd_psfs.size();
+
+  schaapcommon::facets::PixelPosition centerPixel(
+      _settings.trimmedImageWidth / 2, _settings.trimmedImageHeight / 2);
+  const bool hasCenter = std::any_of(
+      facets.begin(), facets.end(),
+      [&centerPixel](
+          const std::shared_ptr<schaapcommon::facets::Facet>& facet) {
+        // Point-in-poly test only evaluated if bounding box does
+        // contain the centerPixel
+        return facet->GetTrimmedBoundingBox().Contains(centerPixel) &&
+               facet->Contains(centerPixel);
+      });
+  // FIXME: raise warning if facets do not cover the entire image, see AST-429
+
+  // Center pixel should be present in one of the facets for the deconvolution
+  if (!facets.empty() && _settings.deconvolutionIterationCount > 0 &&
+      !hasCenter) {
+    throw std::runtime_error(
+        "The center pixel of the full image is not found in one of the facets. "
+        "Make sure your facet file defines a facet that covers the center "
+        "pixel of the main image.");
+  }
+
+  _globalSelection = _settings.GetMSSelection();
+  MSSelection fullSelection = _globalSelection;
+
+  makeImagingTable(0);
+  if (!facets.empty()) updateFacetsInImagingTable(facets, false);
+  if (!dd_psfs.empty()) updateFacetsInImagingTable(dd_psfs, true);
+
+   _globalSelection = selectInterval(fullSelection, 0);
 }

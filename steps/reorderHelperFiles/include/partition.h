@@ -67,28 +67,19 @@ struct PartitionFiles {
 
 class PartitionClass
 {
-  std::set<aocommon::PolarizationEnum> polsOut;
-  size_t polarizationsPerFile;
-  size_t channelParts;
-  size_t max_channels;
-  std::map<size_t, size_t> selectedDataDescIds;
-  std::vector<std::unique_ptr<std::ofstream>> metaFiles;
-  aocommon::UVector<size_t> selectedRowCountPerSpwIndex;
-  std::string temporaryDirectory;
-  std::vector<PartitionFiles> files;
-  
-  std::vector<std::complex<float>> dataBuffer;
 public:
+  PartitionClass():
+      msPath(),
+      temporaryDirectory()
+      {}
+  ~PartitionClass(){}
+
   bool initialModelRequired;
   bool includeModel;
   std::string msPath;
   std::vector<ChannelRange> channels;
   dp3::base::DPInfo infoObj;
 
-  PartitionClass():msPath(""),
-      temporaryDirectory(""){}
-  ~PartitionClass(){}
-  
   struct MetaHeader {
     double startTime = 0.0;
     uint64_t selectedRowCount = 0;
@@ -132,8 +123,7 @@ public:
       fieldId = metaRecordBuffer.fieldId;
     }
     void Write(std::ostream& str) const {
-      MetaRecordBuffer metaRecordBuffer{u,        v,        w,      time,
-                                        antenna1, antenna2, fieldId};
+      MetaRecordBuffer metaRecordBuffer{u, v, w, time, antenna1, antenna2, fieldId};
       str.write(reinterpret_cast<const char*>(&metaRecordBuffer),
                 sizeof(MetaRecordBuffer));
     }
@@ -165,53 +155,48 @@ public:
     }
   };
 
-  // void PartitionMain(const string& msPath, const std::vector<ChannelRange>& channels,
-  //     MSSelection& selection, const string& dataColumnName, const Settings& settings, std::unique_ptr<dp3::base::DPBuffer> buffer); 
-
   size_t GetMaxChannels(const std::vector<ChannelRange>& channel_ranges);
-  std::string getFilenamePrefix(const std::string& msPathStr,
-                                             const std::string& tempDir);
-
-  std::string getPartPrefix(const std::string& msPathStr,
-                                         size_t partIndex,
-                                         aocommon::PolarizationEnum pol,
-                                         size_t dataDescId,
-                                         const std::string& tempDir);
-
-  string getMetaFilename(const string& msPathStr,
-                                      const std::string& tempDir,
-                                      size_t dataDescId);
-
+  string getMetaFilename(const string& msPathStr, const std::string& tempDir, size_t dataDescId);
   std::vector<aocommon::PolarizationEnum> GetMSPolarizations(size_t dataDescId, const casacore::MeasurementSet& ms);
-
-  std::map<size_t, std::vector<aocommon::PolarizationEnum>>
-  GetMSPolarizationsPerDataDescId(const std::vector<ChannelRange>& ranges,
-    casacore::MeasurementSet& ms);
-
   std::map<size_t, size_t> getDataDescIdMap(const std::vector<ChannelRange>& channels);
 
+  std::string getFilenamePrefix(const std::string& msPathStr,
+    const std::string& tempDir);
+
+  std::string getPartPrefix(const std::string& msPathStr, size_t partIndex,
+    aocommon::PolarizationEnum pol, size_t dataDescId, const std::string& tempDir);
+  
+  std::map<size_t, std::vector<aocommon::PolarizationEnum>>
+  GetMSPolarizationsPerDataDescId(const std::vector<ChannelRange>& ranges, casacore::MeasurementSet& ms);
+
   void CopyData(std::complex<float>* dest, size_t startChannel,
-                          size_t endChannel,
-                          const std::vector<aocommon::PolarizationEnum>& polsIn,
-                          const casacore::Array<std::complex<float>>& data,
-                          aocommon::PolarizationEnum polOut);
+    size_t endChannel,
+    const std::vector<aocommon::PolarizationEnum>& polsIn,
+    const casacore::Array<std::complex<float>>& data,
+    aocommon::PolarizationEnum polOut);
 
   template <typename NumType>
-  void CopyWeights(
-    NumType* dest, size_t startChannel, size_t endChannel,
+  void CopyWeights(NumType* dest, size_t startChannel, size_t endChannel,
     const std::vector<aocommon::PolarizationEnum>& polsIn,
     const casacore::Array<std::complex<float>>& data,
     const casacore::Array<float>& weights, const casacore::Array<bool>& flags,
     aocommon::PolarizationEnum polOut);
 
-  void preprocessPartition(MSSelection& selection, 
-  const string& dataColumnName, const Settings& settings);
-  
+  void preprocessPartition(const string& dataColumnName, const Settings& settings);
   void processPartition(dp3::base::DPBuffer* buffer);
-
   void postprocess();
 
-
+private:
+  size_t polarizationsPerFile;
+  size_t channelParts;
+  size_t max_channels;
+  std::string temporaryDirectory;
+  std::vector<PartitionFiles> files;  
+  std::vector<std::complex<float>> dataBuffer;
+  std::set<aocommon::PolarizationEnum> polsOut;
+  std::map<size_t, size_t> selectedDataDescIds;
+  std::vector<std::unique_ptr<std::ofstream>> metaFiles;
+  aocommon::UVector<size_t> selectedRowCountPerSpwIndex;
 };
 
 

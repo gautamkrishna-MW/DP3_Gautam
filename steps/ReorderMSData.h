@@ -38,23 +38,24 @@ class Reorder : public Step {
   
   ~Reorder() override{}
 
-  common::Fields getRequiredFields() const override { return kRequiredFields; }
-
-  common::Fields getProvidedFields() const override { return kProvidedFields; }
-
   /// Process the data.
   /// It keeps the data.
   /// When processed, it invokes the process function of the next step.
   bool process(std::unique_ptr<base::DPBuffer> buffer) override;
+
+  common::Fields getRequiredFields() const override { 
+    return kRequiredFields; 
+  }
+
+  common::Fields getProvidedFields() const override { 
+    return kProvidedFields; 
+  }
 
   bool process(std::unique_ptr<base::BDABuffer> buffer) override {
     // Do the BDA processing here.
     return getNextStep()->process(std::move(buffer));
   }
   
-  /// Finish the processing of this step and subsequent steps.
-  void finish() override;
-
   /// Update the general info.
   void updateInfo(const base::DPInfo& infoObjIn) override { 
     std::cout << "Updated Info Object" << std::endl;
@@ -62,15 +63,13 @@ class Reorder : public Step {
     Step::updateInfo(infoObjIn); 
   }
 
-  /// Show the step parameters.
-  void show(std::ostream& outputStream) const override;
-  
+  void configureSettings();
   /// Show the timings.
   void showTimings(std::ostream&, double duration) const override {}
-
-  /// Get the value in Hertz of a string like "1000 MHz". If unit is
-  /// omitted it defaults to Hertz
-  static double getFreqHz(const string& freqstr) { return 0; }
+  /// Show the step parameters.
+  void show(std::ostream& outputStream) const override;
+  /// Finish the processing of this step and subsequent steps.
+  void finish() override;
 
  private:
   /// Update itsBuf so it contains averages.
