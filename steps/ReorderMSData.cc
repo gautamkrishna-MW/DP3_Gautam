@@ -26,10 +26,14 @@ namespace dp3 {
                 cleanObj.partitionObj.msOutPath = inputMSPath;
             
             cleanObj._settings.filenames.push_back(inputMSPath);
-            predictMode = parset.getBool("predictMode", true);
+            predictMode = parset.getBool("predictMode", false);
             configureSettings(parset);
-                        
-            cleanObj.RunClean();
+            
+            if (!predictMode)
+                cleanObj.RunClean();
+            else
+                cleanObj.RunPredict();
+
             cleanObj.performReordering(predictMode);
         }
 

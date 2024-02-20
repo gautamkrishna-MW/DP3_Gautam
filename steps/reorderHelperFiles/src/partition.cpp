@@ -875,6 +875,12 @@ void PartitionClass::postprocess()
     header.channelStart = channels[part].start,
     header.channelCount = channels[part].end - header.channelStart;
     header.dataDescId = channels[part].dataDescId;
+
+    Logger::Info << "header.hasModel: " << header.hasModel << "\n";
+    Logger::Info << "header.channelStart: " << header.channelStart << "\n";
+    Logger::Info << "header.channelCount: " << header.channelCount << "\n";
+    Logger::Info << "header.dataDescId: " << header.dataDescId << "\n";
+
     for (std::set<aocommon::PolarizationEnum>::const_iterator p =
              polsOut.begin();
          p != polsOut.end(); ++p) {
