@@ -790,6 +790,7 @@ if(BUILD_TESTING)
       steps/test/unit/tPhaseShift.cc
       steps/test/unit/tPreFlagger.cc
       steps/test/unit/tPSet.cc
+      steps/test/unit/tReorderMSData.cc
       steps/test/unit/tScaleData.cc
       steps/test/unit/tScaleDataBDA.cc
       steps/test/unit/tSplit.cc

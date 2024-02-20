@@ -63,7 +63,7 @@ class Reorder : public Step {
     Step::updateInfo(infoObjIn); 
   }
 
-  void configureSettings();
+  void configureSettings(const common::ParameterSet& parset);
   /// Show the timings.
   void showTimings(std::ostream&, double duration) const override {}
   /// Show the step parameters.

@@ -77,6 +77,7 @@ public:
   bool initialModelRequired;
   bool includeModel;
   std::string msPath;
+  std::string msOutPath;
   std::vector<ChannelRange> channels;
   dp3::base::DPInfo infoObj;
 
@@ -155,6 +156,20 @@ public:
     }
   };
 
+  // For simulated Noise
+  class NoiseMap {
+   public:
+    NoiseMap() = default;
+    NoiseMap(std::istream& stream);
+    bool Empty() const { return _map.empty(); }
+    float GetNoiseValue(size_t antenna1, size_t antenna2) const;
+
+   private:
+    // Maps an antenna1, antenna2 pair to the stddev level
+    std::map<std::pair<size_t, size_t>, float> _map;
+  };
+
+  NoiseMap _noiseMap;
   size_t GetMaxChannels(const std::vector<ChannelRange>& channel_ranges);
   string getMetaFilename(const string& msPathStr, const std::string& tempDir, size_t dataDescId);
   std::vector<aocommon::PolarizationEnum> GetMSPolarizations(size_t dataDescId, const casacore::MeasurementSet& ms);
@@ -183,7 +198,7 @@ public:
     aocommon::PolarizationEnum polOut);
 
   void preprocessPartition(const string& dataColumnName, const Settings& settings);
-  void processPartition(dp3::base::DPBuffer* buffer);
+  void processPartition(dp3::base::DPBuffer* buffer, const Settings& settings);
   void postprocess();
 
 private:

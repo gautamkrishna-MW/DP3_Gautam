@@ -5,7 +5,146 @@ inputs:
     type: string
     doc: unique name for the step `.`
     default: reorder
-  type:
+  predictMode:
+    type: bool
+    doc: 
+  parallelReordering:
+    type: integer
+    doc: 
+    default: 4
+  continuedRun:
+    type: bool
+    doc: 
+    default: false
+  simulatedBaselineNoiseFilename:
     type: string
-    doc: Doc test check
-    default: test-input
+    doc: simulatedBaselineNoiseFilename
+    default: 
+  atermConfigFilename:
+    type: string
+    doc: atermConfigFilename
+    default: 
+  ddPsfGridHeight: 
+    type: integer
+    doc: 
+    default: 1
+  ddPsfGridWidth:
+    type: integer
+    doc: 
+    default: 1
+  subtractModel:
+    type: bool
+    doc: 
+    default: false
+  modelUpdateRequired:
+    type: bool
+    doc: 
+    default: true
+  diagonalSolutions:
+    type: bool
+    doc: 
+    default: false
+  gridWithBeam:
+    type: bool
+    doc: 
+    default: false
+  simulateNoise:
+    type: bool
+    doc: 
+    default: false
+  baselineDependentAveragingInWavelengths:
+    type: float
+    doc: 
+    default: 0.0
+  simulatedNoiseStdDev:
+    type: float
+    doc: 
+    default: 0.0
+  deconvolutionMGain:
+    type: float
+    doc: 
+    default: 1.0
+  hasShift:
+    type: bool
+    doc: 
+    default: false
+  joinedFrequencyDeconvolution:
+    type: bool
+    doc: 
+    default: false
+  joinedPolarizationDeconvolution:
+    type: bool
+    doc: 
+    default: false
+  divideChannelsByGaps:
+    type: bool
+    doc: 
+    default: false
+  divideChannelFrequencies:
+    type: string
+    doc: 
+    default: 
+  spectralCorrection:
+    type: string
+    doc: 
+    default: 
+  facetRegionFilename:
+    type: string
+    doc: 
+    default: 
+  dataColumnName:
+    type: string
+    doc: 
+    default: 
+  trimmedImageWidth:
+    type: integer
+    doc: 
+    default: 0
+  trimmedImageHeight:
+    type: integer
+    doc: 
+    default: 0
+  deconvolutionIterationCount:
+    type: integer
+    doc: 
+    default: 0
+  intervalsOut:
+    type: integer
+    doc: 
+    default: 1
+  endChannel:
+    type: integer
+    doc: 
+    default: 0
+  startChannel:
+    type: integer
+    doc: 
+    default: 0
+  channelsOut:
+    type: integer
+    doc: 
+    default: 1
+  pixelScaleX:
+    type: float
+    doc: 
+    default: 0.0
+  pixelScaleY:
+    type: float
+    doc: 
+    default: 0.0
+  imagePadding:
+    type: float
+    doc: 
+    default: 1.2
+  shiftRA:
+    type: float
+    doc: 
+    default: 0.0
+  shiftDec:
+    type: float
+    doc: 
+    default: 0.0
+  spectralCorrectionFrequency:
+    type: float
+    doc: 
+    default: 0.0
