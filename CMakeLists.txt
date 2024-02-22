@@ -21,6 +21,13 @@ else()
   message(FATAL_ERROR "Failed to parse DP3_VERSION='${DP3_VERSION}'")
 endif()
 
+# Get the latest abbreviated commit hash of the working branch
+execute_process(
+  COMMAND git describe
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  OUTPUT_VARIABLE DP3_GIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 option(BUILD_WITH_CUDA "Build with CUDA support" FALSE)
 if(BUILD_WITH_CUDA)
   project(
@@ -320,7 +327,7 @@ endif()
 
 # Include aocommon
 include_directories(${CMAKE_SOURCE_DIR}/external/aocommon/include/)
-set(XTENSOR_LIBRARIES xsimd xtl xtensor)
+set(XTENSOR_LIBRARIES xtl xsimd xtensor xtensor-blas)
 include(external/aocommon/CMake/FetchXTensor.cmake)
 add_compile_definitions(XTENSOR_USE_XSIMD)
 
@@ -401,6 +408,7 @@ add_library(
   ddecal/constraints/SmoothnessConstraint.cc
   ddecal/constraints/TECConstraint.cc
   ddecal/gain_solvers/BdaSolverBuffer.cc
+  ddecal/gain_solvers/DiagonalLowRankSolver.cc
   ddecal/gain_solvers/DiagonalSolver.cc
   ddecal/gain_solvers/FullJonesSolver.cc
   ddecal/gain_solvers/HybridSolver.cc
@@ -414,7 +422,7 @@ add_library(
   ddecal/gain_solvers/SolverTools.cc
   ddecal/linear_solvers/LLSSolver.cc
   ${DDE_ARMADILLO_FILES})
-target_link_libraries(DDECal xsimd xtensor)
+target_link_libraries(DDECal xsimd xtensor xtensor-blas)
 
 if(BUILD_WITH_CUDA)
   target_link_libraries(DDECal cudawrappers::cu)
@@ -490,6 +498,7 @@ add_library(
   steps/BDAAverager.cc
   steps/BDAExpander.cc
   steps/BdaGroupPredict.cc
+  steps/Clipper.cc
   steps/Counter.cc
   steps/Demixer.cc
   steps/DummyStep.cc
@@ -536,7 +545,7 @@ add_library(
   steps/reorderHelperFiles/src/observationinfo.cpp  
   steps/reorderHelperFiles/src/progressbar.cpp  
   steps/reorderHelperFiles/src/settings.cpp)
-target_link_libraries(DP3_OBJ xsimd xtensor)
+target_link_libraries(DP3_OBJ xsimd xtensor)  
 
 add_library(
   ParmDB OBJECT
@@ -740,6 +749,7 @@ if(BUILD_TESTING)
       ddecal/test/unit/SolverTester.cc
       ddecal/test/unit/tAntennaConstraint.cc
       ddecal/test/unit/tBdaSolverBuffer.cc
+      ddecal/test/unit/tDiagonalLowRankSolver.cc
       ddecal/test/unit/tLBFGSSolver.cc
       ddecal/test/unit/tLinearSolvers.cc
       ddecal/test/unit/tLLSSolver.cc
@@ -860,7 +870,7 @@ if(BUILD_TESTING)
   if(BUILD_WITH_CUDA)
     set_target_properties(unittests PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
   endif()
-  target_link_libraries(unittests LIBDP3 ${DP3_LIBRARIES} xtensor)
+  target_link_libraries(unittests LIBDP3 ${DP3_LIBRARIES} xtensor xtensor-blas)
 
   # Automatically (re)build the unit tests on every ctest run.
   add_test(buildunittests ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target
@@ -887,6 +897,8 @@ if(BUILD_TESTING)
       solvers/scalar
       solvers/scalar_normaleq
       solvers/diagonal
+      solvers/diagonal_low_rank_solver
+      solvers/diagonal_low_rank_full_step_solver
       solvers/full_jones
       solvers/iterative_scalar
       solvers/iterative_scalar_dd_intervals
@@ -897,7 +909,7 @@ if(BUILD_TESTING)
       solvers/hybrid
       solvers/min_iterations)
 
-  if(LIBDIRAC_FOUND)
+  if(LIBDIRAC_FOUND AND NOT HAVE_CUDA)
     list(APPEND SLOW_TESTS solvers/lbfgs_scalar solvers/lbfgs_diagonal
          solvers/lbfgs_full_jones)
   endif()
