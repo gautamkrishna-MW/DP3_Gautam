@@ -1,6 +1,7 @@
 
 #include <fstream>
 #include <algorithm>
+#include <boost/test/unit_test.hpp>
 
 #include "tStepCommon.h"
 #include "../../ReorderMSData.h"
@@ -13,6 +14,8 @@ using dp3::base::DPBuffer;
 using dp3::base::DPInfo;
 using dp3::common::ParameterSet;
 using dp3::steps::Step;
+
+BOOST_AUTO_TEST_SUITE(reorder)
 
 bool compareBinaries(const std::string& filename1, const std::string& filename2)
 {
@@ -42,7 +45,7 @@ void test1(std::string msPath, std::string msOutPath) {
 
     if (msOutPath.empty())
     {
-        std:string tmpPath(msPath);
+        std::string tmpPath(msPath);
         tmpPath.resize(tmpPath.size()-3);
         parset.add("msout", tmpPath + "_output.ms");
     }
@@ -74,3 +77,5 @@ BOOST_AUTO_TEST_CASE(testReorder1) {
     std::remove("./midbands_averaged.ms-part0000-I-b0-w.tmp");
     // std::remove("./midbands_averaged.ms-spw0-parted-meta.tmp");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
