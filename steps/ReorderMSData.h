@@ -58,7 +58,7 @@ class Reorder : public Step {
   
   /// Update the general info.
   void updateInfo(const base::DPInfo& infoObjIn) override { 
-    std::cout << "Updated Info Object" << std::endl;
+    // std::cout << "Updated Info Object" << std::endl;
     cleanObj.partitionObj.infoObj = infoObjIn;
     Step::updateInfo(infoObjIn); 
   }

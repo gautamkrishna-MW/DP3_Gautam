@@ -2,6 +2,7 @@
 #include "ReorderMSData.h"
 
 #include <limits>
+#include <iomanip>
 
 
 using dp3::common::ParameterSet;
@@ -42,19 +43,42 @@ namespace dp3 {
         /// When processed, it invokes the process function of the next step.
         bool Reorder::process(std::unique_ptr<base::DPBuffer> buffer)
         {
+            // static size_t numTimes = 0;
+            // std::cout << "Time Slot: " << numTimes++ << std::endl;
+            // std::cout << "Time: " << std::setprecision(10) << buffer->GetTime() << std::endl;
+            // std::cout << "Num BL: " << buffer->GetFlags().shape(0) << std::endl;
+            // std::cout << "Num Rows: " << buffer->GetRowNumbers().size() << std::endl;
+            // std::cout << "Num UVW: " << buffer->GetUvw().shape(0) << ", " << buffer->GetUvw().shape(1) << std::endl;
+            // std::cout << "Num Data: " << buffer->GetData().shape(0) << ", " << buffer->GetData().shape(1) << ", " << buffer->GetData().shape(2) << std::endl;
+            // std::cout << "Num Weight: " << buffer->GetWeights().shape(0) << ", " << buffer->GetWeights().shape(1) << ", " << buffer->GetWeights().shape(2) << std::endl;
+            // std::cout << "Process done" << std::endl;
+            // std::cout << "\n\n" << std::endl;
             cleanObj.partitionObj.processPartition(buffer.get(), cleanObj._settings);
             getNextStep()->process(std::move(buffer));
             return true;
         }
 
         /// Show the step parameters.
-        void Reorder::show(std::ostream& outputStream) const
+        void Reorder::show(std::ostream& os) const
         {
-            outputStream << "Test output" << std::endl;
+            os << "Reorder\n";
+            os << "  input MS:       " << cleanObj.partitionObj.msPath << '\n';
+            if (cleanObj.partitionObj.msPath.empty()) {
+                os << "    *** MS does not exist ***\n";
+            } else {
+                os << "  band            " << getInfo().spectralWindow() << '\n';
+                os << "  nchan:          " << getInfo().nchan() << "\n";
+                os << "  ncorrelations:  " << getInfo().ncorr() << '\n';
+                unsigned int nrbl = getInfo().nbaselines();
+                os << "  nbaselines:     " << nrbl << '\n';
+                os << "  ntimes:         " << getInfo().ntime() << '\n';  // itsSelMS can contain timeslots that are ignored in process
+                os << "  time interval:  " << getInfo().timeInterval() << '\n';
+            }
         } 
 
         void Reorder::finish() { 
             cleanObj.partitionObj.postprocess();
+            // std::cout << "Finish" << std::endl;
             getNextStep()->finish(); 
         }
 
