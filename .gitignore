@@ -3,7 +3,6 @@ DP3.kdev4
 build/
 relBuild/
 builds/
-resources/midbands
 __pycache__/
 cmakestrap.sh
 *~
