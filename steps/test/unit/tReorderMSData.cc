@@ -1,6 +1,7 @@
 
 #include <fstream>
 #include <algorithm>
+#include <limits>
 #include <boost/test/unit_test.hpp>
 
 #include "tStepCommon.h"
@@ -20,6 +21,24 @@ using dp3::steps::Step;
 using dp3::common::Fields;
 
 BOOST_AUTO_TEST_SUITE(reorder)
+
+bool compareMetaBinaries(const std::string& filename1, const std::string& filename2)
+{
+    std::ifstream file1(filename1, std::ifstream::ate | std::ifstream::binary); //open file at the end
+    std::ifstream file2(filename2, std::ifstream::ate | std::ifstream::binary); //open file at the end
+
+    if (file1.fail() || file2.fail())
+    {
+        std::cout << "Failed to open Meta file" << std::endl;
+    }
+
+    file1.ignore(std::numeric_limits<std::streamsize>::max(),'\n');          // Ignore first line
+    file2.ignore(std::numeric_limits<std::streamsize>::max(),'\n');          // Ignore first line
+    std::istreambuf_iterator<char> begin1(file1);
+    std::istreambuf_iterator<char> begin2(file2);
+
+    return std::equal(begin1,std::istreambuf_iterator<char>(),begin2); //Second argument is end-of-range iterator
+}
 
 bool compareBinaries(const std::string& filename1, const std::string& filename2)
 {
@@ -83,8 +102,8 @@ BOOST_AUTO_TEST_CASE(testReorder1) {
         "./testOut.ms-part0000-I-b0-w.tmp"));
 
     // Meta File check
-    // BOOST_CHECK(compareBinaries("../resources/midbandsrefTmps/reorderTestMeta.tmp", 
-    //     "./reorderTestMS.ms-spw0-parted-meta.tmp"));
+    BOOST_CHECK(compareMetaBinaries("../resources/midbands/refTmps/reorderTestMeta.tmp", 
+        "./testOut.ms-spw0-parted-meta.tmp"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
