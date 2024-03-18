@@ -42,20 +42,19 @@ struct MetaHeaderBuffer {
 #pragma pack(pop)
 
 template <typename NumType>
-  static bool IsCFinite(const std::complex<NumType>& c) {
-    return std::isfinite(c.real()) && std::isfinite(c.imag());
-  }
+static bool IsCFinite(const std::complex<NumType>& c) {
+  return std::isfinite(c.real()) && std::isfinite(c.imag());
+}
 
 struct ChannelRange {
-
   int dataDescId;
   size_t start, end;
   bool operator<(const ChannelRange& rhs) const {
-      if (dataDescId < rhs.dataDescId) return true;
-      if (dataDescId > rhs.dataDescId) return false;
-      if (start < rhs.start) return true;
-      if (start > rhs.start) return false;
-      return end < rhs.end;
+    if (dataDescId < rhs.dataDescId) return true;
+    if (dataDescId > rhs.dataDescId) return false;
+    if (start < rhs.start) return true;
+    if (start > rhs.start) return false;
+    return end < rhs.end;
   }
 };
 
@@ -65,14 +64,10 @@ struct PartitionFiles {
   std::unique_ptr<std::ofstream> model;
 };
 
-class PartitionClass
-{
-public:
-  PartitionClass():
-      msPath(),
-      temporaryDirectory()
-      {}
-  ~PartitionClass(){}
+class PartitionClass {
+ public:
+  PartitionClass() : msPath(), temporaryDirectory() {}
+  ~PartitionClass() {}
 
   bool initialModelRequired;
   bool includeModel;
@@ -88,7 +83,7 @@ public:
     void Read(std::istream& str) {
       MetaHeaderBuffer metaHeaderBuffer;
       str.read(reinterpret_cast<char*>(&metaHeaderBuffer),
-                sizeof(MetaHeaderBuffer));
+               sizeof(MetaHeaderBuffer));
       startTime = metaHeaderBuffer.startTime;
       selectedRowCount = metaHeaderBuffer.selectedRowCount;
       filenameLength = metaHeaderBuffer.filenameLength;
@@ -113,7 +108,7 @@ public:
     void Read(std::istream& str) {
       MetaRecordBuffer metaRecordBuffer;
       str.read(reinterpret_cast<char*>(&metaRecordBuffer),
-                sizeof(MetaRecordBuffer));
+               sizeof(MetaRecordBuffer));
 
       u = metaRecordBuffer.u;
       v = metaRecordBuffer.v;
@@ -124,7 +119,8 @@ public:
       fieldId = metaRecordBuffer.fieldId;
     }
     void Write(std::ostream& str) const {
-      MetaRecordBuffer metaRecordBuffer{u, v, w, time, antenna1, antenna2, fieldId};
+      MetaRecordBuffer metaRecordBuffer{u,        v,        w,      time,
+                                        antenna1, antenna2, fieldId};
       str.write(reinterpret_cast<const char*>(&metaRecordBuffer),
                 sizeof(MetaRecordBuffer));
     }
@@ -142,7 +138,7 @@ public:
     void Read(std::istream& str) {
       PartHeaderBuffer partHeaderBuffer;
       str.read(reinterpret_cast<char*>(&partHeaderBuffer),
-                sizeof(PartHeaderBuffer));
+               sizeof(PartHeaderBuffer));
       channelCount = partHeaderBuffer.channelCount;
       channelStart = partHeaderBuffer.channelStart;
       dataDescId = partHeaderBuffer.dataDescId;
@@ -171,48 +167,54 @@ public:
 
   NoiseMap _noiseMap;
   size_t GetMaxChannels(const std::vector<ChannelRange>& channel_ranges);
-  string getMetaFilename(const string& msPathStr, const std::string& tempDir, size_t dataDescId);
-  std::vector<aocommon::PolarizationEnum> GetMSPolarizations(size_t dataDescId, const casacore::MeasurementSet& ms);
-  std::map<size_t, size_t> getDataDescIdMap(const std::vector<ChannelRange>& channels);
+  string getMetaFilename(const string& msPathStr, const std::string& tempDir,
+                         size_t dataDescId);
+  std::vector<aocommon::PolarizationEnum> GetMSPolarizations(
+      size_t dataDescId, const casacore::MeasurementSet& ms);
+  std::map<size_t, size_t> getDataDescIdMap(
+      const std::vector<ChannelRange>& channels);
 
   std::string getFilenamePrefix(const std::string& msPathStr,
-    const std::string& tempDir);
+                                const std::string& tempDir);
 
   std::string getPartPrefix(const std::string& msPathStr, size_t partIndex,
-    aocommon::PolarizationEnum pol, size_t dataDescId, const std::string& tempDir);
-  
+                            aocommon::PolarizationEnum pol, size_t dataDescId,
+                            const std::string& tempDir);
+
   std::map<size_t, std::vector<aocommon::PolarizationEnum>>
-  GetMSPolarizationsPerDataDescId(const std::vector<ChannelRange>& ranges, casacore::MeasurementSet& ms);
+  GetMSPolarizationsPerDataDescId(const std::vector<ChannelRange>& ranges,
+                                  casacore::MeasurementSet& ms);
 
   void CopyData(std::complex<float>* dest, size_t startChannel,
-    size_t endChannel,
-    const std::vector<aocommon::PolarizationEnum>& polsIn,
-    const casacore::Array<std::complex<float>>& data,
-    aocommon::PolarizationEnum polOut);
+                size_t endChannel,
+                const std::vector<aocommon::PolarizationEnum>& polsIn,
+                const casacore::Array<std::complex<float>>& data,
+                aocommon::PolarizationEnum polOut);
 
   template <typename NumType>
   void CopyWeights(NumType* dest, size_t startChannel, size_t endChannel,
-    const std::vector<aocommon::PolarizationEnum>& polsIn,
-    const casacore::Array<std::complex<float>>& data,
-    const casacore::Array<float>& weights, const casacore::Array<bool>& flags,
-    aocommon::PolarizationEnum polOut);
+                   const std::vector<aocommon::PolarizationEnum>& polsIn,
+                   const casacore::Array<std::complex<float>>& data,
+                   const casacore::Array<float>& weights,
+                   const casacore::Array<bool>& flags,
+                   aocommon::PolarizationEnum polOut);
 
-  void preprocessPartition(const string& dataColumnName, const Settings& settings);
+  void preprocessPartition(const string& dataColumnName,
+                           const Settings& settings);
   void processPartition(dp3::base::DPBuffer* buffer, const Settings& settings);
   void postprocess();
 
-private:
+ private:
   size_t polarizationsPerFile;
   size_t channelParts;
   size_t max_channels;
   std::string temporaryDirectory;
-  std::vector<PartitionFiles> files;  
+  std::vector<PartitionFiles> files;
   std::vector<std::complex<float>> dataBuffer;
   std::set<aocommon::PolarizationEnum> polsOut;
   std::map<size_t, size_t> selectedDataDescIds;
   std::vector<std::unique_ptr<std::ofstream>> metaFiles;
   aocommon::UVector<size_t> selectedRowCountPerSpwIndex;
 };
-
 
 #endif

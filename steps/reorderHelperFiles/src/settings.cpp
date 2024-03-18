@@ -37,8 +37,8 @@ void Settings::Validate() const {
     }
 
     if (gridderType != GridderType::IDG && !atermConfigFilename.empty())
-    throw std::runtime_error(
-        "Use of an aterm config file required IDG enabled: add -use-idg");
+      throw std::runtime_error(
+          "Use of an aterm config file required IDG enabled: add -use-idg");
 
     if (baselineDependentAveragingInWavelengths != 0.0) {
       throw std::runtime_error(
@@ -88,7 +88,7 @@ void Settings::Validate() const {
 void Settings::checkPolarizations() const {
   bool hasXY = polarizations.count(aocommon::Polarization::XY) != 0;
   bool hasYX = polarizations.count(aocommon::Polarization::YX) != 0;
-  
+
   if ((hasXY && !hasYX) || (!hasXY && hasYX))
     throw std::runtime_error(
         "You are imaging only one of the XY or YX polarizations. This is not "
@@ -96,4 +96,3 @@ void Settings::checkPolarizations() const {
         "output of imaging both polarizations will be the XY and imaginary XY "
         "images).");
 }
-

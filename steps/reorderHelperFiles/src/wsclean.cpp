@@ -28,9 +28,7 @@ using aocommon::Polarization;
 using aocommon::PolarizationEnum;
 using aocommon::units::Angle;
 
-WSClean::WSClean()
-    : _globalSelection(),
-      _ddPsfCount(0) {}
+WSClean::WSClean() : _globalSelection(), _ddPsfCount(0) {}
 
 WSClean::~WSClean() = default;
 
@@ -221,9 +219,11 @@ void WSClean::makeImagingTableEntry(
 void WSClean::performReordering(bool isPredictMode) {
   std::mutex mutex;
 
-  partitionObj.includeModel = _settings.deconvolutionMGain != 1.0 || isPredictMode ||
-                  _settings.subtractModel || _settings.continuedRun;
-  partitionObj.initialModelRequired = _settings.subtractModel || _settings.continuedRun;
+  partitionObj.includeModel = _settings.deconvolutionMGain != 1.0 ||
+                              isPredictMode || _settings.subtractModel ||
+                              _settings.continuedRun;
+  partitionObj.initialModelRequired =
+      _settings.subtractModel || _settings.continuedRun;
 
   if (_settings.parallelReordering != 1) Logger::Info << "Reordering...\n";
 
@@ -496,5 +496,5 @@ void WSClean::RunClean() {
   if (!facets.empty()) updateFacetsInImagingTable(facets, false);
   if (!dd_psfs.empty()) updateFacetsInImagingTable(dd_psfs, true);
 
-   _globalSelection = selectInterval(fullSelection, 0);
+  _globalSelection = selectInterval(fullSelection, 0);
 }

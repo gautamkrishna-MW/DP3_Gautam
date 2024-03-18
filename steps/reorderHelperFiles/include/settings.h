@@ -39,7 +39,7 @@ class Settings {
   GridderType gridderType = GridderType::WGridder;
   bool continuedRun;
   size_t parallelReordering;
-  
+
   /// Maps output channel indices to node indices, when using MPI.
   std::vector<size_t> fieldIds;
   std::set<aocommon::PolarizationEnum> polarizations;
@@ -82,7 +82,6 @@ class Settings {
   double shiftRA;
   double shiftDec;
   double spectralCorrectionFrequency;
-  
 
   MSSelection GetMSSelection() const {
     MSSelection selection;
@@ -93,32 +92,31 @@ class Settings {
     selection.SetEvenOrOddTimesteps(evenOddTimesteps);
     return selection;
   }
-
 };
 
 inline Settings::Settings()
     : filenames(),
-      gridderType (GridderType::WGridder),
-      continuedRun (false),
-      parallelReordering (4),
+      gridderType(GridderType::WGridder),
+      continuedRun(false),
+      parallelReordering(4),
 
-      fieldIds ({0}),
-      polarizations ({aocommon::Polarization::StokesI}),
+      fieldIds({0}),
+      polarizations({aocommon::Polarization::StokesI}),
       temporaryDirectory(),
       simulatedBaselineNoiseFilename(),
       atermConfigFilename(),
-      ddPsfGridHeight (1),
-      ddPsfGridWidth (1),
-      subtractModel (false),
-      modelUpdateRequired (true),
-      diagonalSolutions (false),
-      gridWithBeam (false),
-      simulateNoise (false),
+      ddPsfGridHeight(1),
+      ddPsfGridWidth(1),
+      subtractModel(false),
+      modelUpdateRequired(true),
+      diagonalSolutions(false),
+      gridWithBeam(false),
+      simulateNoise(false),
       baselineDependentAveragingInWavelengths(0.0),
       simulatedNoiseStdDev(0.0),
-      deconvolutionMGain (1.0),
-      
-      hasShift (false),
+      deconvolutionMGain(1.0),
+
+      hasShift(false),
       joinedFrequencyDeconvolution(false),
       joinedPolarizationDeconvolution(false),
       divideChannelsByGaps(false),
@@ -136,9 +134,8 @@ inline Settings::Settings()
       pixelScaleX(0.0),
       pixelScaleY(0.0),
       imagePadding(1.2),
-      shiftRA (0.0),
-      shiftDec (0.0),
-      spectralCorrectionFrequency(0.0)
-      {}
+      shiftRA(0.0),
+      shiftDec(0.0),
+      spectralCorrectionFrequency(0.0) {}
 
 #endif
