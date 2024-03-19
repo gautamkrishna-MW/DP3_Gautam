@@ -32,8 +32,8 @@
 #include "../include/progressbar.h"
 
 using aocommon::Logger;
-using dp3::base::DPInfo;
 using dp3::base::DPBuffer;
+using dp3::base::DPInfo;
 using dp3::common::rownr_t;
 using dp3::steps::Step;
 
@@ -70,7 +70,7 @@ PartitionClass::NoiseMap::NoiseMap(std::istream& stream) {
 }
 
 float PartitionClass::NoiseMap::GetNoiseValue(size_t antenna1,
-                                                  size_t antenna2) const {
+                                              size_t antenna2) const {
   size_t a1 = antenna1;
   size_t a2 = antenna2;
   if (a1 > a2) std::swap(a1, a2);
@@ -83,7 +83,8 @@ float PartitionClass::NoiseMap::GetNoiseValue(size_t antenna1,
   return iter->second;
 }
 
-size_t PartitionClass::GetMaxChannels(const std::vector<ChannelRange>& channel_ranges) {
+size_t PartitionClass::GetMaxChannels(
+    const std::vector<ChannelRange>& channel_ranges) {
   size_t max_channels = 0;
   for (const ChannelRange& range : channel_ranges) {
     max_channels = std::max(max_channels, range.end - range.start);
@@ -92,7 +93,7 @@ size_t PartitionClass::GetMaxChannels(const std::vector<ChannelRange>& channel_r
 }
 
 std::string PartitionClass::getFilenamePrefix(const std::string& msPathStr,
-                                             const std::string& tempDir) {
+                                              const std::string& tempDir) {
   boost::filesystem::path prefixPath;
   if (tempDir.empty())
     prefixPath = msPathStr;
@@ -110,10 +111,10 @@ std::string PartitionClass::getFilenamePrefix(const std::string& msPathStr,
 }
 
 std::string PartitionClass::getPartPrefix(const std::string& msPathStr,
-                                         size_t partIndex,
-                                         aocommon::PolarizationEnum pol,
-                                         size_t dataDescId,
-                                         const std::string& tempDir) {
+                                          size_t partIndex,
+                                          aocommon::PolarizationEnum pol,
+                                          size_t dataDescId,
+                                          const std::string& tempDir) {
   std::string prefix = getFilenamePrefix(msPathStr, tempDir);
 
   std::ostringstream partPrefix;
@@ -128,7 +129,8 @@ std::string PartitionClass::getPartPrefix(const std::string& msPathStr,
   return partPrefix.str();
 }
 
-std::map<size_t, size_t> PartitionClass::getDataDescIdMap(const std::vector<ChannelRange>& channels) {
+std::map<size_t, size_t> PartitionClass::getDataDescIdMap(
+    const std::vector<ChannelRange>& channels) {
   std::map<size_t, size_t> dataDescIds;
   size_t spwIndex = 0;
   for (const ChannelRange& range : channels) {
@@ -141,8 +143,8 @@ std::map<size_t, size_t> PartitionClass::getDataDescIdMap(const std::vector<Chan
 }
 
 string PartitionClass::getMetaFilename(const string& msPathStr,
-                                      const std::string& tempDir,
-                                      size_t dataDescId) {
+                                       const std::string& tempDir,
+                                       size_t dataDescId) {
   std::string prefix = getFilenamePrefix(msPathStr, tempDir);
 
   std::ostringstream s;
@@ -150,8 +152,8 @@ string PartitionClass::getMetaFilename(const string& msPathStr,
   return s.str();
 }
 
-
-std::vector<aocommon::PolarizationEnum> PartitionClass::GetMSPolarizations(size_t dataDescId, const casacore::MeasurementSet& ms) {
+std::vector<aocommon::PolarizationEnum> PartitionClass::GetMSPolarizations(
+    size_t dataDescId, const casacore::MeasurementSet& ms) {
   // First get the polarization index corresponding with the data desc id
   casacore::MSDataDescription dataDescriptionTable = ms.dataDescription();
   casacore::ScalarColumn<int> polarizationIndexColumn(
@@ -175,23 +177,22 @@ std::vector<aocommon::PolarizationEnum> PartitionClass::GetMSPolarizations(size_
 }
 
 std::map<size_t, std::vector<aocommon::PolarizationEnum>>
-PartitionClass::GetMSPolarizationsPerDataDescId(const std::vector<ChannelRange>& ranges,
-    casacore::MeasurementSet& ms) {
+PartitionClass::GetMSPolarizationsPerDataDescId(
+    const std::vector<ChannelRange>& ranges, casacore::MeasurementSet& ms) {
   std::map<size_t, std::vector<aocommon::PolarizationEnum>>
       msPolarizationsPerDataDescId;
   for (const ChannelRange& range : ranges) {
     msPolarizationsPerDataDescId.emplace(
-        range.dataDescId,
-        GetMSPolarizations(range.dataDescId, ms));
+        range.dataDescId, GetMSPolarizations(range.dataDescId, ms));
   }
   return msPolarizationsPerDataDescId;
 }
 
-void PartitionClass::CopyData(std::complex<float>* dest, size_t startChannel,
-                          size_t endChannel,
-                          const std::vector<aocommon::PolarizationEnum>& polsIn,
-                          const casacore::Array<std::complex<float>>& data,
-                          aocommon::PolarizationEnum polOut) {
+void PartitionClass::CopyData(
+    std::complex<float>* dest, size_t startChannel, size_t endChannel,
+    const std::vector<aocommon::PolarizationEnum>& polsIn,
+    const casacore::Array<std::complex<float>>& data,
+    aocommon::PolarizationEnum polOut) {
   const size_t polCount = polsIn.size();
   casacore::Array<std::complex<float>>::const_contiter inPtr =
       data.cbegin() + startChannel * polCount;
@@ -444,7 +445,6 @@ void PartitionClass::CopyData(std::complex<float>* dest, size_t startChannel,
   }
 }
 
-
 template <typename NumType>
 void PartitionClass::CopyWeights(
     NumType* dest, size_t startChannel, size_t endChannel,
@@ -616,10 +616,8 @@ template void PartitionClass::CopyWeights<std::complex<float>>(
     const casacore::Array<float>& weights, const casacore::Array<bool>& flags,
     aocommon::PolarizationEnum polOut);
 
-
 void PartitionClass::preprocessPartition(const string& dataColumnName,
-           const Settings& settings)
-{
+                                         const Settings& settings) {
   if (settings.gridderType == GridderType::IDG) {
     if (settings.polarizations.size() == 1) {
       if ((settings.ddPsfGridWidth > 1 || settings.ddPsfGridHeight > 1) &&
@@ -639,7 +637,7 @@ void PartitionClass::preprocessPartition(const string& dataColumnName,
   polarizationsPerFile =
       aocommon::Polarization::GetVisibilityCount(*polsOut.begin());
   temporaryDirectory = settings.temporaryDirectory;
-   
+
   channelParts = channels.size();
   if (channelParts != 1) {
     Logger::Debug << "Partitioning in " << channels.size() << " channels:";
@@ -689,7 +687,7 @@ void PartitionClass::preprocessPartition(const string& dataColumnName,
     MetaHeader metaHeader;
     metaHeader.selectedRowCount = 0;  // not yet known
     metaHeader.filenameLength = msOutPath.size();
-    metaHeader.startTime = 0;//rowProvider->StartTime();
+    metaHeader.startTime = 0;  // rowProvider->StartTime();
     metaHeader.Write(*metaFiles[spwIndex]);
     metaFiles[spwIndex]->write(msOutPath.c_str(), msOutPath.size());
     if (!metaFiles[spwIndex]->good())
@@ -698,8 +696,8 @@ void PartitionClass::preprocessPartition(const string& dataColumnName,
   }
 }
 
-void PartitionClass::processPartition(dp3::base::DPBuffer* buffer, const Settings& settings)
-{
+void PartitionClass::processPartition(dp3::base::DPBuffer* buffer,
+                                      const Settings& settings) {
   casacore::MeasurementSet msObj(msPath);
   const std::map<size_t, std::vector<aocommon::PolarizationEnum>>
       msPolarizationsPerDataDescId =
@@ -710,13 +708,14 @@ void PartitionClass::processPartition(dp3::base::DPBuffer* buffer, const Setting
   if (settings.baselineDependentAveragingInWavelengths == 0.0) {
     if (settings.simulateNoise) {
       if (settings.simulatedBaselineNoiseFilename.empty())
-        _distribution = std::normal_distribution<float>(0.0, settings.simulatedNoiseStdDev);
-      else
-      {
-          std::ifstream file(settings.simulatedBaselineNoiseFilename);
-          if (!file)
-            throw std::runtime_error("Can't open baseline noise file " + settings.simulatedBaselineNoiseFilename);
-          _noiseMap = NoiseMap(file);
+        _distribution =
+            std::normal_distribution<float>(0.0, settings.simulatedNoiseStdDev);
+      else {
+        std::ifstream file(settings.simulatedBaselineNoiseFilename);
+        if (!file)
+          throw std::runtime_error("Can't open baseline noise file " +
+                                   settings.simulatedBaselineNoiseFilename);
+        _noiseMap = NoiseMap(file);
       }
     }
   }
@@ -737,9 +736,11 @@ void PartitionClass::processPartition(dp3::base::DPBuffer* buffer, const Setting
   casacore::Vector<dp3::common::rownr_t> rowNum = buffer->GetRowNumbers();
   std::vector<int> antenna1List = infoObj.getAnt1();
   std::vector<int> antenna2List = infoObj.getAnt2();
-  
-  casacore::ScalarColumn<casacore::Int> dataDescTable(msObj, casacore::MS::columnName(casacore::MS::DATA_DESC_ID));
-  casacore::Vector<long long unsigned int> rowNumArray = buffer->GetRowNumbers();
+
+  casacore::ScalarColumn<casacore::Int> dataDescTable(
+      msObj, casacore::MS::columnName(casacore::MS::DATA_DESC_ID));
+  casacore::Vector<long long unsigned int> rowNumArray =
+      buffer->GetRowNumbers();
   // uint32_t dataDescId = infoObj.spectralWindow();
 
   // Casacore arrays used to write the meta, data, weight and model files.
@@ -751,41 +752,40 @@ void PartitionClass::processPartition(dp3::base::DPBuffer* buffer, const Setting
   static size_t selectedRowsTotal = 0;
   selectedRowCountPerSpwIndex.resize(selectedDataDescIds.size(), 0);
 
-  for (size_t bl=0; bl<n_baselines; bl++) {
-
-    MetaRecord meta;    
-    size_t strideVal = n_channels*n_correlations;
-    bool *flagPtr = &buffFlags(bl, 0, 0);
-    float *weightPtr = &buffWeights(bl, 0, 0);
-    std::complex<float> *dataPtr = &buffData(bl, 0, 0);
+  for (size_t bl = 0; bl < n_baselines; bl++) {
+    MetaRecord meta;
+    size_t strideVal = n_channels * n_correlations;
+    bool* flagPtr = &buffFlags(bl, 0, 0);
+    float* weightPtr = &buffWeights(bl, 0, 0);
+    std::complex<float>* dataPtr = &buffData(bl, 0, 0);
 
     flagArray = casacore::Vector<bool>(flagPtr, strideVal, 0);
     weightSpectrumArray = casacore::Vector<float>(weightPtr, strideVal, 0);
 
-    if (settings.simulateNoise)
-    {
+    if (settings.simulateNoise) {
       std::mt19937 _rng;
-      const float stddev = 
-        _noiseMap.Empty() ? 1.0 : _noiseMap.GetNoiseValue(antenna1List[bl], antenna2List[bl]);
+      const float stddev =
+          _noiseMap.Empty()
+              ? 1.0
+              : _noiseMap.GetNoiseValue(antenna1List[bl], antenna2List[bl]);
 
       casacore::Array<std::complex<float>>::contiter iter;
       for (iter = dataArray.cbegin(); iter != dataArray.cend(); ++iter) {
         if (std::isfinite(iter->real()) && std::isfinite(iter->imag())) {
           iter->real(_distribution(_rng) * stddev);
           iter->imag(_distribution(_rng) * stddev);
-        }
-        else {
+        } else {
           iter->real(std::numeric_limits<float>::quiet_NaN());
           iter->imag(std::numeric_limits<float>::quiet_NaN());
         }
       }
-    }
-    else
-    {
+    } else {
       dataArray = casacore::Vector<std::complex<float>>(dataPtr, strideVal, 0);
     }
-    
-    meta.u = buffUvw(bl,0);meta.v = buffUvw(bl,1);meta.w = buffUvw(bl,2);    
+
+    meta.u = buffUvw(bl, 0);
+    meta.v = buffUvw(bl, 1);
+    meta.w = buffUvw(bl, 2);
     meta.antenna1 = antenna1List[bl];
     meta.antenna2 = antenna2List[bl];
     meta.fieldId = 0;
@@ -802,7 +802,7 @@ void PartitionClass::processPartition(dp3::base::DPBuffer* buffer, const Setting
 
     if (initialModelRequired)
       modelArray = casacore::Vector<std::complex<float>>(dataPtr, strideVal, 0);
-    
+
     size_t fileIndex = 0;
     for (size_t part = 0; part != channelParts; ++part) {
       if (channels[part].dataDescId == int(dataDescId)) {
@@ -851,15 +851,14 @@ void PartitionClass::processPartition(dp3::base::DPBuffer* buffer, const Setting
   // Logger::Info << "Total selected rows: " << selectedRowsTotal << '\n';
 }
 
-void PartitionClass::postprocess()
-{
+void PartitionClass::postprocess() {
   // Rewrite meta headers to include selected row count
   for (const std::pair<const size_t, size_t>& p : selectedDataDescIds) {
     const size_t spwIndex = p.second;
     MetaHeader metaHeader;
     metaHeader.selectedRowCount = selectedRowCountPerSpwIndex[spwIndex];
     metaHeader.filenameLength = msOutPath.size();
-    metaHeader.startTime = 0;//rowProvider->StartTime();
+    metaHeader.startTime = 0;  // rowProvider->StartTime();
     metaFiles[spwIndex]->seekp(0);
     metaHeader.Write(*metaFiles[spwIndex]);
     metaFiles[spwIndex]->write(msOutPath.c_str(), msOutPath.size());
@@ -870,7 +869,7 @@ void PartitionClass::postprocess()
   header.hasModel = includeModel;
   size_t fileIndex = 0;
   dataBuffer.assign(max_channels * polarizationsPerFile, 0.0);
-  
+
   for (size_t part = 0; part != channelParts; ++part) {
     header.channelStart = channels[part].start,
     header.channelCount = channels[part].end - header.channelStart;

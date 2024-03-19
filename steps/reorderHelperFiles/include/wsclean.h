@@ -45,7 +45,7 @@ class WSClean {
   PartitionClass partitionObj;
   Settings _settings;
 
- private:  
+ private:
   ObservationInfo getObservationInfo() const;
   std::pair<double, double> getLMShift() const;
   MSSelection selectInterval(MSSelection& fullSelection, size_t intervalIndex);
@@ -63,7 +63,7 @@ class WSClean {
   void updateFacetsInImagingTable(
       const std::vector<std::shared_ptr<schaapcommon::facets::Facet>>& facets,
       bool updateDdPsfs);
-  
+
   bool DataDescIdIsUsed(size_t ms_index, size_t data_desc_id) const {
     const size_t band_index = _msBands[ms_index].GetBandIndex(data_desc_id);
     // An empty selection means that all bands are selected
@@ -73,7 +73,7 @@ class WSClean {
   }
 
   MSSelection _globalSelection;
-  std::vector<OutputChannelInfo> _infoPerChannel;  
+  std::vector<OutputChannelInfo> _infoPerChannel;
   std::vector<aocommon::MultiBandData> _msBands;
   ImagingTable _imagingTable;
   ObservationInfo _observationInfo;
@@ -81,7 +81,6 @@ class WSClean {
   std::size_t _ddPsfCount;  // 0 means dd-psfs are not used.
   double _l_shift;
   double _m_shift;
-
 };
 
 #endif
