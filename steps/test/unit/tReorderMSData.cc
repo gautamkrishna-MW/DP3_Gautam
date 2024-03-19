@@ -1,16 +1,16 @@
 
-#include <fstream>
 #include <algorithm>
-#include <limits>
 #include <boost/test/unit_test.hpp>
+#include <fstream>
+#include <limits>
 
+#include "dp3/base/DPBuffer.h"
+#include "dp3/base/DPInfo.h"
+#include "dp3/steps/Step.h"
 #include "tStepCommon.h"
-#include <dp3/steps/Step.h>
-#include "../../NullStep.h"
 #include "../../InputStep.h"
+#include "../../NullStep.h"
 #include "../../ReorderMSData.h"
-#include <dp3/base/DPBuffer.h>
-#include <dp3/base/DPInfo.h>
 #include "../../../common/ParameterSet.h"
 #include "../../../common/StringTools.h"
 
@@ -22,56 +22,51 @@ using dp3::steps::Step;
 
 BOOST_AUTO_TEST_SUITE(reorder)
 
-bool compareMetaBinaries(const std::string& filename1,
-                         const std::string& filename2) {
-  std::ifstream file1(
-      filename1,
-      std::ifstream::ate | std::ifstream::binary);  // open file at the end
-  std::ifstream file2(
-      filename2,
-      std::ifstream::ate | std::ifstream::binary);  // open file at the end
+// Function to compare two binary files. If the files for comparison are Meta file, the flag isMetaFile is set to true.
+bool compareBinaryFiles(const std::string& referenceFile, const std::string& inputFile, bool isMetaFile) {
+  std::ifstream refFilePtr(referenceFile, std::ifstream::ate | std::ifstream::binary);  // open file at the end
+  std::ifstream inpFilePtr(inputFile, std::ifstream::ate | std::ifstream::binary);  // open file at the end
 
-  if (file1.fail() || file2.fail()) {
-    std::cout << "Failed to open Meta file" << std::endl;
-  }
-
-  file1.ignore(std::numeric_limits<std::streamsize>::max(),
-               '\n');  // Ignore first line
-  file2.ignore(std::numeric_limits<std::streamsize>::max(),
-               '\n');  // Ignore first line
-  std::istreambuf_iterator<char> begin1(file1);
-  std::istreambuf_iterator<char> begin2(file2);
-
-  return std::equal(begin1, std::istreambuf_iterator<char>(),
-                    begin2);  // Second argument is end-of-range iterator
-}
-
-bool compareBinaries(const std::string& filename1,
-                     const std::string& filename2) {
-  std::ifstream file1(
-      filename1,
-      std::ifstream::ate | std::ifstream::binary);  // open file at the end
-  std::ifstream file2(
-      filename2,
-      std::ifstream::ate | std::ifstream::binary);  // open file at the end
-
-  if (file1.fail() || file2.fail()) {
+  if (refFilePtr.fail() || inpFilePtr.fail()) {
     std::cout << "Failed to open file" << std::endl;
+    return false;
   }
 
-  const std::ifstream::pos_type fileSize = file1.tellg();
-  if (fileSize != file2.tellg()) {
-    return false;  // different file size
+  // Resetting file pointers to compare from the beginning.
+  refFilePtr.seekg(0);  // rewind
+  inpFilePtr.seekg(0);  // rewind
+
+  // Meta file contain path information in the first line of the binary.
+  // Since the path representation differs (i.e absolute path vs relative path), we skip the path check
+  // and compare only the rest of the meta information.
+  if (isMetaFile)
+  {
+    refFilePtr.ignore(std::numeric_limits<std::streamsize>::max(),'\n');  // Ignore first line
+    inpFilePtr.ignore(std::numeric_limits<std::streamsize>::max(),'\n');  // Ignore first line
+
+    if (refFilePtr.eof() || inpFilePtr.eof())
+    {
+      std::cout << "End of file reached" << std::endl;
+      return false;
+    }
+  }
+  else
+  {
+    // If file sizes are unequal return false.
+    if (refFilePtr.tellg() != inpFilePtr.tellg()) {
+      std::cout << "Unequal binary file sizes" << std::endl;
+      return false;  // different file size
+    }
+    // Resetting file pointers to compare from the beginning.
+    refFilePtr.seekg(0);  // rewind
+    inpFilePtr.seekg(0);  // rewind
   }
 
-  file1.seekg(0);  // rewind
-  file2.seekg(0);  // rewind
+  std::istreambuf_iterator<char> refFileIterator(refFilePtr);
+  std::istreambuf_iterator<char> inpFileIterator(inpFilePtr);
+  std::istreambuf_iterator<char> endOfStream; // Default constructor is a end-of-stream iterator. 
 
-  std::istreambuf_iterator<char> begin1(file1);
-  std::istreambuf_iterator<char> begin2(file2);
-
-  return std::equal(begin1, std::istreambuf_iterator<char>(),
-                    begin2);  // Second argument is end-of-range iterator
+  return std::equal(refFileIterator, endOfStream, inpFileIterator);
 }
 
 // Test simple averaging without flagged points.
@@ -105,18 +100,18 @@ BOOST_AUTO_TEST_CASE(testReorder1) {
 
   // Data File check
   BOOST_CHECK(
-      compareBinaries("../resources/midbands/refTmps/reorderTestVis.tmp",
-                      "./testOut.ms-part0000-I-b0.tmp"));
+      compareBinaryFiles("../resources/midbands/refTmps/reorderTestVis.tmp",
+                      "./testOut.ms-part0000-I-b0.tmp", false));
 
   // Weight File check
   BOOST_CHECK(
-      compareBinaries("../resources/midbands/refTmps/reorderTestWeights.tmp",
-                      "./testOut.ms-part0000-I-b0-w.tmp"));
+      compareBinaryFiles("../resources/midbands/refTmps/reorderTestWeights.tmp",
+                      "./testOut.ms-part0000-I-b0-w.tmp", false));
 
   // Meta File check
   BOOST_CHECK(
-      compareMetaBinaries("../resources/midbands/refTmps/reorderTestMeta.tmp",
-                          "./testOut.ms-spw0-parted-meta.tmp"));
+      compareBinaryFiles("../resources/midbands/refTmps/reorderTestMeta.tmp",
+                          "./testOut.ms-spw0-parted-meta.tmp", true));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
