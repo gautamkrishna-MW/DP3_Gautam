@@ -70,7 +70,7 @@ void compareBinaryFiles(const std::string& reference_filename,
                                   input_file_iterator, end_of_stream);
 }
 
-// Test simple averaging without flagged points.
+// Test reorder functionality with default settings
 void ReorderTest(std::string ms_input_path, std::string ms_output_path) {
   // Create the steps.
   ParameterSet parset;
