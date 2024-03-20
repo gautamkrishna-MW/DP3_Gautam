@@ -24,120 +24,94 @@ BOOST_AUTO_TEST_SUITE(reorder)
 
 // Function to compare two binary files. If the files for comparison are Meta
 // file, the flag isMetaFile is set to true.
-std::pair<std::istreambuf_iterator<char>, std::istreambuf_iterator<char>>
-compareBinaryFiles(const std::string& referenceFile,
-                   const std::string& inputFile, bool isMetaFile) {
+void compareBinaryFiles(const std::string& reference_filename,
+                        const std::string& input_filename, bool isMetaFile) {
   std::pair<std::istreambuf_iterator<char>, std::istreambuf_iterator<char>>
-      filePtrPair;
+      iterator_pair;
 
-  std::ifstream refFilePtr(
-      referenceFile,
-      std::ifstream::ate | std::ifstream::binary);  // open file at the end
-  std::ifstream inpFilePtr(
-      inputFile,
-      std::ifstream::ate | std::ifstream::binary);  // open file at the end
+  std::ifstream reference_file_ptr(reference_filename);
+  std::ifstream input_file_ptr(input_filename);
 
-  if (refFilePtr.fail() || inpFilePtr.fail()) {
+  if (reference_file_ptr.fail() || input_file_ptr.fail()) {
     std::cout << "Failed to open file" << std::endl;
-    return filePtrPair;
+    BOOST_CHECK(false);
   }
 
-  // Resetting file pointers to compare from the beginning.
-  refFilePtr.seekg(0);  // rewind
-  inpFilePtr.seekg(0);  // rewind
-
-  // Meta file contain path information in the first line of the binary.
+  // Meta files contain path information in the first line of the binary.
   // Since the path representation differs (i.e absolute path vs relative path),
   // we skip the path check and compare only the rest of the meta information.
   if (isMetaFile) {
-    refFilePtr.ignore(std::numeric_limits<std::streamsize>::max(),
-                      '\n');  // Ignore first line
-    inpFilePtr.ignore(std::numeric_limits<std::streamsize>::max(),
-                      '\n');  // Ignore first line
+    reference_file_ptr.ignore(std::numeric_limits<std::streamsize>::max(),
+                              '\n');
+    input_file_ptr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    if (refFilePtr.eof() || inpFilePtr.eof()) {
+    if (reference_file_ptr.eof() || input_file_ptr.eof()) {
       std::cout << "End of file reached" << std::endl;
-      return filePtrPair;
+      BOOST_CHECK(false);
     }
   } else {
     // If file sizes are unequal return false.
-    if (refFilePtr.tellg() != inpFilePtr.tellg()) {
+    if (reference_file_ptr.tellg() != input_file_ptr.tellg()) {
       std::cout << "Unequal binary file sizes" << std::endl;
-      return filePtrPair;  // different file size
+      BOOST_CHECK(false);
     }
+
     // Resetting file pointers to compare from the beginning.
-    refFilePtr.seekg(0);  // rewind
-    inpFilePtr.seekg(0);  // rewind
+    reference_file_ptr.seekg(0);
+    input_file_ptr.seekg(0);
   }
 
-  std::istreambuf_iterator<char> refFileIterator(refFilePtr);
-  std::istreambuf_iterator<char> inpFileIterator(inpFilePtr);
+  // Setting the file stream to not to skip whitespaces.
+  reference_file_ptr >> std::noskipws;
+  input_file_ptr >> std::noskipws;
+  std::istreambuf_iterator<char> reference_file_iterator(reference_file_ptr);
+  std::istreambuf_iterator<char> input_file_iterator(input_file_ptr);
 
-  filePtrPair.first = refFileIterator;
-  filePtrPair.second = inpFileIterator;
-
-  return filePtrPair;
+  std::istreambuf_iterator<char> end_of_stream;
+  BOOST_REQUIRE_EQUAL_COLLECTIONS(reference_file_iterator, end_of_stream,
+                                  input_file_iterator, end_of_stream);
 }
 
 // Test simple averaging without flagged points.
-void test1(std::string msPath, std::string msOutPath) {
+void ReorderTest(std::string ms_input_path, std::string ms_output_path) {
   // Create the steps.
   ParameterSet parset;
-  parset.add("msin", msPath);
+  parset.add("msin", ms_input_path);
   parset.add("msin.ntimes", "2");
 
-  if (msOutPath.empty()) {
-    std::string tmpPath(msPath);
-    tmpPath.resize(tmpPath.size() - 3);
-    parset.add("msout", tmpPath + "_output.ms");
+  if (ms_output_path.empty()) {
+    std::string temp_path(ms_input_path);
+    temp_path.resize(temp_path.size() - 3);
+    parset.add("msout", temp_path + "_output.ms");
   } else
-    parset.add("msout", msOutPath);
+    parset.add("msout", ms_output_path);
 
   // Creating steps
   std::shared_ptr<dp3::steps::InputStep> input_step =
       std::move(dp3::steps::InputStep::CreateReader(parset));
-  auto reorderStep = std::make_shared<dp3::steps::Reorder>(parset, "");
-  auto nullStep = std::make_shared<dp3::steps::NullStep>();
+  auto reorder_step = std::make_shared<dp3::steps::Reorder>(parset, "");
+  auto null_step = std::make_shared<dp3::steps::NullStep>();
 
   // Assiging the fields to read
   input_step->setFieldsToRead(Step::kDataField | Step::kFlagsField |
                               Step::kWeightsField | Step::kUvwField);
-  dp3::steps::test::Execute({input_step, reorderStep, nullStep});
+  dp3::steps::test::Execute({input_step, reorder_step, null_step});
 }
 
 BOOST_AUTO_TEST_CASE(testReorder1) {
-  test1("../resources/midbands/reorderTestMS.ms", "./testOut.ms");
-
-  // Default stream buffer iterator has a end-of-stream state, so using this to
-  // detect end of the stream.
-  std::istreambuf_iterator<char> endOfStream;
+  ReorderTest("../resources/midbands/reorderTestMS.ms", "./testOut.ms");
 
   // Data File check
-  std::pair<std::istreambuf_iterator<char>, std::istreambuf_iterator<char>>
-      filePtrPair_vis;
-  filePtrPair_vis =
-      compareBinaryFiles("../resources/midbands/refTmps/reorderTestVis.tmp",
-                         "./testOut.ms-part0000-I-b0.tmp", false);
-  BOOST_REQUIRE_EQUAL_COLLECTIONS(filePtrPair_vis.first, endOfStream,
-                                  filePtrPair_vis.second, endOfStream);
+  compareBinaryFiles("../resources/midbands/refTmps/reorderTestVis.tmp",
+                     "./testOut.ms-part0000-I-b0.tmp", false);
 
   // Weight File check
-  std::pair<std::istreambuf_iterator<char>, std::istreambuf_iterator<char>>
-      filePtrPair_weight;
-  filePtrPair_weight =
-      compareBinaryFiles("../resources/midbands/refTmps/reorderTestWeights.tmp",
-                         "./testOut.ms-part0000-I-b0-w.tmp", false);
-  BOOST_REQUIRE_EQUAL_COLLECTIONS(filePtrPair_weight.first, endOfStream,
-                                  filePtrPair_weight.second, endOfStream);
+  compareBinaryFiles("../resources/midbands/refTmps/reorderTestWeights.tmp",
+                     "./testOut.ms-part0000-I-b0-w.tmp", false);
 
   // Meta File check
-  std::pair<std::istreambuf_iterator<char>, std::istreambuf_iterator<char>>
-      filePtrPair_meta;
-  filePtrPair_meta =
-      compareBinaryFiles("../resources/midbands/refTmps/reorderTestMeta.tmp",
-                         "./testOut.ms-spw0-parted-meta.tmp", true);
-  BOOST_REQUIRE_EQUAL_COLLECTIONS(filePtrPair_meta.first, endOfStream,
-                                  filePtrPair_meta.second, endOfStream);
+  compareBinaryFiles("../resources/midbands/refTmps/reorderTestMeta.tmp",
+                     "./testOut.ms-spw0-parted-meta.tmp", true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
