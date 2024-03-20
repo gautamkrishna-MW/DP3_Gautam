@@ -4,18 +4,16 @@
 #include <fstream>
 #include <limits>
 
-#include "dp3/base/DPBuffer.h"
-#include "dp3/base/DPInfo.h"
 #include "dp3/steps/Step.h"
+
 #include "tStepCommon.h"
+
+#include "../../../common/ParameterSet.h"
+
 #include "../../InputStep.h"
 #include "../../NullStep.h"
 #include "../../ReorderMSData.h"
-#include "../../../common/ParameterSet.h"
-#include "../../../common/StringTools.h"
 
-using dp3::base::DPBuffer;
-using dp3::base::DPInfo;
 using dp3::common::Fields;
 using dp3::common::ParameterSet;
 using dp3::steps::Step;
