@@ -1,18 +1,16 @@
 
 #include <algorithm>
-#include <boost/test/unit_test.hpp>
 #include <fstream>
 #include <limits>
 
-#include "dp3/steps/Step.h"
+#include <boost/test/unit_test.hpp>
 
 #include "tStepCommon.h"
-
-#include "../../../common/ParameterSet.h"
-
+#include "dp3/steps/Step.h"
 #include "../../InputStep.h"
 #include "../../NullStep.h"
 #include "../../ReorderMSData.h"
+#include "../../../common/ParameterSet.h"
 
 using dp3::common::Fields;
 using dp3::common::ParameterSet;
@@ -21,9 +19,9 @@ using dp3::steps::Step;
 BOOST_AUTO_TEST_SUITE(reorder)
 
 // Function to compare two binary files. If the files for comparison are Meta
-// file, the flag isMetaFile is set to true.
+// file, the flag is_meta_file is set to true.
 void compareBinaryFiles(const std::string& reference_filename,
-                        const std::string& input_filename, bool isMetaFile) {
+                        const std::string& input_filename, bool is_meta_file) {
   std::pair<std::istreambuf_iterator<char>, std::istreambuf_iterator<char>>
       iterator_pair;
 
@@ -38,7 +36,7 @@ void compareBinaryFiles(const std::string& reference_filename,
   // Meta files contain path information in the first line of the binary.
   // Since the path representation differs (i.e absolute path vs relative path),
   // we skip the path check and compare only the rest of the meta information.
-  if (isMetaFile) {
+  if (is_meta_file) {
     reference_file_ptr.ignore(std::numeric_limits<std::streamsize>::max(),
                               '\n');
     input_file_ptr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -87,8 +85,10 @@ void ReorderTest(std::string ms_input_path, std::string ms_output_path) {
   // Creating steps
   std::shared_ptr<dp3::steps::InputStep> input_step =
       std::move(dp3::steps::InputStep::CreateReader(parset));
-  auto reorder_step = std::make_shared<dp3::steps::Reorder>(parset, "");
-  auto null_step = std::make_shared<dp3::steps::NullStep>();
+  std::shared_ptr<dp3::steps::Reorder> reorder_step =
+      std::make_shared<dp3::steps::Reorder>(parset, "");
+  std::shared_ptr<dp3::steps::NullStep> null_step =
+      std::make_shared<dp3::steps::NullStep>();
 
   // Assiging the fields to read
   input_step->setFieldsToRead(Step::kDataField | Step::kFlagsField |
