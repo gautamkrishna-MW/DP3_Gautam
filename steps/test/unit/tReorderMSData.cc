@@ -22,14 +22,11 @@ BOOST_AUTO_TEST_SUITE(reorder)
 // file, the flag is_meta_file is set to true.
 void compareBinaryFiles(const std::string& reference_filename,
                         const std::string& input_filename, bool is_meta_file) {
-  std::pair<std::istreambuf_iterator<char>, std::istreambuf_iterator<char>>
-      iterator_pair;
+  
+  std::ifstream reference_file(reference_filename);
+  std::ifstream input_file(input_filename);
 
-  std::ifstream reference_file_ptr(reference_filename);
-  std::ifstream input_file_ptr(input_filename);
-
-  if (reference_file_ptr.fail() || input_file_ptr.fail()) {
-    std::cout << "Failed to open file" << std::endl;
+  if (reference_file.fail() || input_file.fail()) {
     BOOST_CHECK(false);
   }
 
@@ -37,31 +34,27 @@ void compareBinaryFiles(const std::string& reference_filename,
   // Since the path representation differs (i.e absolute path vs relative path),
   // we skip the path check and compare only the rest of the meta information.
   if (is_meta_file) {
-    reference_file_ptr.ignore(std::numeric_limits<std::streamsize>::max(),
+    reference_file.ignore(std::numeric_limits<std::streamsize>::max(),
                               '\n');
-    input_file_ptr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    input_file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    if (reference_file_ptr.eof() || input_file_ptr.eof()) {
-      std::cout << "End of file reached" << std::endl;
+    if (reference_file.eof() || input_file.eof()) {
       BOOST_CHECK(false);
     }
   } else {
     // If file sizes are unequal return false.
-    if (reference_file_ptr.tellg() != input_file_ptr.tellg()) {
-      std::cout << "Unequal binary file sizes" << std::endl;
+    if (reference_file.tellg() != input_file.tellg()) {
       BOOST_CHECK(false);
     }
 
     // Resetting file pointers to compare from the beginning.
-    reference_file_ptr.seekg(0);
-    input_file_ptr.seekg(0);
+    reference_file.seekg(0);
+    input_file.seekg(0);
   }
 
-  // Setting the file stream to not to skip whitespaces.
-  reference_file_ptr >> std::noskipws;
-  input_file_ptr >> std::noskipws;
-  std::istreambuf_iterator<char> reference_file_iterator(reference_file_ptr);
-  std::istreambuf_iterator<char> input_file_iterator(input_file_ptr);
+  // Creating file stream iterators and check if they are equal
+  std::istreambuf_iterator<char> reference_file_iterator(reference_file);
+  std::istreambuf_iterator<char> input_file_iterator(input_file);
 
   std::istreambuf_iterator<char> end_of_stream;
   BOOST_REQUIRE_EQUAL_COLLECTIONS(reference_file_iterator, end_of_stream,
