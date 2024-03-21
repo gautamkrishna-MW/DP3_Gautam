@@ -26,9 +26,8 @@ void compareBinaryFiles(const std::string& reference_filename,
   std::ifstream reference_file(reference_filename);
   std::ifstream input_file(input_filename);
 
-  if (reference_file.fail() || input_file.fail()) {
-    BOOST_CHECK(false);
-  }
+  BOOST_CHECK(!reference_file.fail());
+  BOOST_CHECK(!input_file.fail());
 
   // Meta files contain path information in the first line of the binary.
   // Since the path representation differs (i.e absolute path vs relative path),
@@ -38,14 +37,11 @@ void compareBinaryFiles(const std::string& reference_filename,
                               '\n');
     input_file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    if (reference_file.eof() || input_file.eof()) {
-      BOOST_CHECK(false);
-    }
+    BOOST_CHECK(!reference_file.eof());
+    BOOST_CHECK(!input_file.eof());
   } else {
-    // If file sizes are unequal return false.
-    if (reference_file.tellg() != input_file.tellg()) {
-      BOOST_CHECK(false);
-    }
+    // If file sizes are unequal the test fails.
+    BOOST_CHECK(reference_file.tellg() == input_file.tellg());
 
     // Resetting file pointers to compare from the beginning.
     reference_file.seekg(0);
