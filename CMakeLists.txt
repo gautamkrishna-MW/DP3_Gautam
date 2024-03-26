@@ -524,6 +524,7 @@ add_library(
   steps/PhaseShift.cc
   steps/Predict.cc
   steps/PreFlagger.cc
+  steps/ReorderMSData.cc
   steps/ResultStep.cc
   steps/ScaleData.cc
   steps/SetBeam.cc
@@ -534,8 +535,18 @@ add_library(
   steps/UVWFlagger.cc
   steps/ApplyBeam.cc
   steps/NullStokes.cc
-  steps/SagecalPredict.cc)
-target_link_libraries(DP3_OBJ xsimd xtensor xtensor-blas)
+  steps/SagecalPredict.cc
+  steps/reorderHelperFiles/src/facetreader.cpp 
+  steps/reorderHelperFiles/src/facetutil.cpp    
+  steps/reorderHelperFiles/src/partition.cpp
+  steps/reorderHelperFiles/src/wsclean.cpp
+  steps/reorderHelperFiles/src/imagingtable.cpp  
+  steps/reorderHelperFiles/src/msselection.cpp  
+  steps/reorderHelperFiles/src/imagingtableentry.cpp  
+  steps/reorderHelperFiles/src/observationinfo.cpp  
+  steps/reorderHelperFiles/src/progressbar.cpp  
+  steps/reorderHelperFiles/src/settings.cpp)
+target_link_libraries(DP3_OBJ xsimd xtensor)  
 
 add_library(
   ParmDB OBJECT
@@ -781,6 +792,7 @@ if(BUILD_TESTING)
       steps/test/unit/tPhaseShift.cc
       steps/test/unit/tPreFlagger.cc
       steps/test/unit/tPSet.cc
+      steps/test/unit/tReorderMSData.cc
       steps/test/unit/tScaleData.cc
       steps/test/unit/tScaleDataBDA.cc
       steps/test/unit/tSplit.cc

@@ -1,8 +1,10 @@
 .kdev4/
 DP3.kdev4
 build/
+relBuild/
 builds/
 __pycache__/
 cmakestrap.sh
 *~
 .vscode
+scratchpad

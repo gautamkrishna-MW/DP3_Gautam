@@ -53,6 +53,8 @@
 #include "../steps/UVWFlagger.h"
 #include "../steps/Upsample.h"
 
+#include "../steps/ReorderMSData.h"
+
 #include "../pythondp3/PyStep.h"
 
 #include <dp3/common/Fields.h>
@@ -208,6 +210,8 @@ std::shared_ptr<Step> MakeSingleStep(const std::string& type,
     step = std::make_shared<steps::SagecalPredict>(parset, prefix);
   } else if (type == "h5parmpredict") {
     step = std::make_shared<steps::H5ParmPredict>(parset, prefix);
+  } else if (type == "reorder") {
+    step = std::make_shared<steps::Reorder>(parset, prefix);
   } else if (type == "gaincal" || type == "calibrate") {
     step = std::make_shared<steps::GainCal>(parset, prefix);
   } else if (type == "python" || type == "pythondppp") {
